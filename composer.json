@@ -1,0 +1,68 @@
+{
+    "name": "fuerza/wordpress-boilerplate",
+    "description": "Fuerza Studio WordPress Boilerplate",
+    "repositories":[
+        {
+            "type":"composer",
+            "url":"https://wpackagist.org"
+        },
+	{
+            "type": "package",
+            "package": {
+                "name": "advanced-custom-fields/advanced-custom-fields-pro",
+                "version": "5.9.5",
+                "type": "wordpress-plugin",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://connect.advancedcustomfields.com/v2/plugins/download?p=pro&k=b3JkZXJfaWQ9MTMxNDczfHR5cGU9ZGV2ZWxvcGVyfGRhdGU9MjAxOC0wNS0xNyAyMDozNzo0MQ=="
+                },
+                "require": {
+                    "composer/installers": "^1.0.7"
+                }
+            }
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "roots/wordpress": "*",
+        "wpackagist-plugin/wordpress-seo":"*",
+        "wpackagist-plugin/safe-svg":"*",
+        "wpackagist-plugin/wp-migrate-db":"*",
+	    "wpackagist-plugin/hummingbird-performance": "*",
+        "wpackagist-plugin/duracelltomi-google-tag-manager": "*",
+        "wpackagist-plugin/wordfence": "*",
+        "wpackagist-plugin/ewww-image-optimizer": "*",
+        "wpackagist-plugin/cloudflare": "*",
+        "wpackagist-plugin/wp-mail-smtp": "*",
+        "wpackagist-plugin/contact-form-7": "*",
+        "advanced-custom-fields/advanced-custom-fields-pro": "*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Acme": "src/"
+        }
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-master"
+    },
+    "scripts": {
+        "move-wordpress": [
+            "rm -rf wordpress/wp-content/plugins/*",
+            "rm -rf wordpress/wp-content/themes/*",
+            "cp -rf wordpress/* .",
+            "rm -rf wordpress"
+        ],
+        "post-install-cmd": [
+            "@move-wordpress"
+        ],
+        "post-update-cmd": [
+            "@move-wordpress"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "roots/wordpress-core-installer": true,
+            "composer/installers": true
+        }
+    }
+}

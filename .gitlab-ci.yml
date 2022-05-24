@@ -1,0 +1,117 @@
+image: fuerzastudio/fuerza-ci-cd:ubuntu-php-8.1-nodejs-16
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  project: theme-project #Project Name for homolog server
+  theme: fuerzastudio #Theme name for build
+
+before_script:
+  - mkdir -p ~/.ssh
+  - echo -e "$SSH_KEY_HOMOLOG" > ~/.ssh/id_rsa
+  - chmod 600  ~/.ssh/id_rsa
+  - 'echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  - mkdir -p $HOME/.docker
+  - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
+
+ComposerWP:
+  stage: build
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    untracked: true
+    paths:
+      - vendor/
+    policy: pull-push
+  artifacts:
+    paths:
+      - ./
+    expire_in: 30 mins
+  script:
+    - composer install --no-interaction --optimize-autoloader --no-dev
+  only:
+    - homolog
+    - master
+    - merge_requests
+
+ComposerTheme:
+  stage: build
+  cache:
+    key: "theme-$CI_COMMIT_REF_SLUG"
+    untracked: true
+    paths:
+      - wp-content/themes/${theme}/vendor/
+    policy: pull-push
+  artifacts:
+    paths:
+      - wp-content/themes/${theme}
+    expire_in: 30 mins
+  before_script:
+    - cd wp-content/themes/${theme}
+  script:
+    - composer install --no-interaction --optimize-autoloader
+  only:
+    - homolog
+    - master
+    - merge_requests
+
+YarnTheme:
+  stage: build
+  cache:
+    key: "theme-$CI_COMMIT_REF_SLUG"
+    untracked: true
+    paths:
+      - wp-content/themes/${theme}/dist/
+      - wp-content/themes/${theme}/node_modules/
+    policy: pull-push
+  artifacts:
+    paths:
+      - wp-content/themes/${theme}
+    expire_in: 30 mins
+  before_script:
+    - cd wp-content/themes/${theme}
+  script:
+    - cp config.json.dist config.json
+    - yarn install
+    - yarn build
+  only:
+    - homolog
+    - master
+    - merge_requests
+
+LintFront:
+  stage: test
+  needs: [YarnTheme]
+  before_script:
+    - cd wp-content/themes/${theme}
+  script:
+    - yarn lint:scripts
+    - yarn lint:styles
+  only:
+    - merge_requests
+
+LintBack:
+  stage: test
+  needs: [ComposerTheme, YarnTheme]
+  before_script:
+    - cd wp-content/themes/${theme}
+  script:
+    - yarn lint:wp
+    - yarn lint:wpsrc
+  only:
+    - merge_requests
+
+deploy to Homolog:
+  stage: deploy
+  script:
+    - rm -rf .git* composer.* license.txt readme.html wp-config-sample.php wp-admin/install.php
+    - rm -rf wp-content/themes/${theme}/node_modules
+    - rsync -ahrvz --exclude='wp-content/' --chmod="D755,F644" --chown=${WEBSERVER_USER_HOM}:${WEBSERVER_GROUP_HOM} -e "ssh -oStrictHostKeyChecking=no -p ${SSH_PORT_HOM}" --rsync-path="${SUDO_CMD_HOM} rsync" ./ ${SSH_USER_HOM}@${SSH_HOST_HOM}:${NGINX_HTDOCS_HOM}
+    - rsync -ahrvz --delete-excluded --chmod="D755,F644" --chown=${WEBSERVER_USER_HOM}:${WEBSERVER_GROUP_HOM} -e "ssh -oStrictHostKeyChecking=no -p ${SSH_PORT_HOM}" --rsync-path="${SUDO_CMD_HOM} rsync" ./wp-content/languages/* ${SSH_USER_HOM}@${SSH_HOST_HOM}:${NGINX_HTDOCS_HOM}/wp-content/languages/
+    - rsync -ahrvz --delete-excluded --chmod="D755,F644" --chown=${WEBSERVER_USER_HOM}:${WEBSERVER_GROUP_HOM} -e "ssh -oStrictHostKeyChecking=no -p ${SSH_PORT_HOM}" --rsync-path="${SUDO_CMD_HOM} rsync" ./wp-content/themes/* ${SSH_USER_HOM}@${SSH_HOST_HOM}:${NGINX_HTDOCS_HOM}/wp-content/themes/
+    - rsync -ahrvz --delete-excluded --chmod="D755,F644" --chown=${WEBSERVER_USER_HOM}:${WEBSERVER_GROUP_HOM} -e "ssh -oStrictHostKeyChecking=no -p ${SSH_PORT_HOM}" --rsync-path="${SUDO_CMD_HOM} rsync" ./wp-content/plugins/* ${SSH_USER_HOM}@${SSH_HOST_HOM}:${NGINX_HTDOCS_HOM}/wp-content/plugins/
+    - ssh -p ${SSH_PORT_HOM} ${SSH_USER_HOM}@${SSH_HOST_HOM} "${SUDO_CMD_HOM} chown -R ${WEBSERVER_USER_HOM}:${WEBSERVER_GROUP_HOM} ${NGINX_HTDOCS_HOM}"
+  only:
+    - homolog

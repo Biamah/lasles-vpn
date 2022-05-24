@@ -1,0 +1,86 @@
+{
+  "variables": {
+    "color": {
+      "black": "#000",
+      "white": "#fff",
+      "gray-800": "#363636",
+      "gray-700": "#818181",
+      "gray-600": "#b7b6b6",
+      "gray-300": "#d3d1d1",
+      "gray-200": "#e0e0e0",
+      "gray-100": "#f3f2f2"
+    },
+    "gradient": {
+      "majorelle-blue-to-neon-blue": "linear-gradient(90deg, #5845E4 0%, #29199F 100%)"
+    },
+    "font-size": {
+      "xs": "0.9rem",
+      "sm": "1rem",
+      "md": "1.3rem",
+      "lg": "1.875rem",
+      "xl": "2.25rem",
+      "xxl": "3rem",
+      "xxxl": "3.5rem"
+    },
+    "grid-breakpoint": {
+      "xs": "0",
+      "sm": "576px",
+      "md": "768px",
+      "lg": "992px",
+      "xl": "1400px",
+      "xxl": "1600px",
+      "xxxl": "1900px"
+    },
+    "font-weight": {
+      "thin": 100,
+      "extra-light": 200,
+      "light": 300,
+      "regular": 400,
+      "normal": 400,
+      "medium": 500,
+      "semi-bold": 600,
+      "bold": 700,
+      "extra-bold": 800,
+      "black": 900
+    }
+  },
+  "supports": {
+    "social-media": [
+      "facebook",
+      "instagram",
+      "twitter",
+      "pinterest",
+      "linkedin"
+    ]
+  },
+  "development": {
+    "url": "https://fuerzastudio.local/",
+    "port": 3000
+  },
+  "bundles": [
+    "frontend",
+    "admin",
+    "login",
+    "editor"
+  ],
+  "release": {
+    "configWhitelist": [
+      "variables"
+    ],
+    "include": [
+      "app/",
+      "dist/",
+      "templates/",
+      "languages/",
+      "vendor/",
+      "views/",
+      "config.json",
+      "LICENSE",
+      "README.md",
+      "readme.txt",
+      "screenshot.png",
+      "style.css",
+      "*.php"
+    ]
+  }
+}
